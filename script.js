@@ -125,15 +125,20 @@ class particle {
         this.color = `rgb(${r},${g},${b})`
     }
     draw() {
+        ctx.fillStyle = 'rgba(255, 0, 0, 1)'
         ctx.font = `${cellsize * imageScale}px arial`;
+        // ctx.font = `${cellsize * imageScale *(1+this.brightness)}px arial`;
         ctx.textAlign = "center"
+        // ctx.fillText(this.emo, this.x, this.y);
+        ctx.globalCompositeOperation = 'lighter';
+        ctx.globalAlpha = this.brightness + .1;
         ctx.fillText(this.emo, this.x, this.y);
     }
 
 }
 
 
-const colors = [
+const colorsRGB = [
     { name: "red", rgb: [255, 0, 0] },
     { name: "brown", rgb: [165, 42, 42] },
     { name: "orange", rgb: [255, 165, 0] },
@@ -288,14 +293,14 @@ function colorDistance(color1, color2) {
 }
 
 // Function to find the closest predefined color for a given pixel color
-function findClosestColor(pixelColor) {
-    let closestColor = colors[0];
+function findClosestColorRGB(pixelColor) {
+    let closestColor = colorsRGB[0];
     let closestDistance = colorDistance(pixelColor, closestColor.rgb);
 
-    for (let i = 1; i < colors.length; i++) {
-        const distance = colorDistance(pixelColor, colors[i].rgb);
+    for (let i = 1; i < colorsRGB.length; i++) {
+        const distance = colorDistance(pixelColor, colorsRGB[i].rgb);
         if (distance < closestDistance) {
-            closestColor = colors[i];
+            closestColor = colorsRGB[i];
             closestDistance = distance;
         }
     }
@@ -305,8 +310,11 @@ function findClosestColor(pixelColor) {
 
 // Function to apply color conversion to emoji
 function convertCanvasColors(r, g, b) {
-    const pixelColor = [r, g, b];
-    const closestColor = findClosestColor(pixelColor);
+    const pixelColorHSL = rgbToHsv(r, g, b)
+    const closestColor = findClosestColorHSV(pixelColorHSL);
+    // const pixelColorRGB = [r,g,b];
+    // const closestColor = findClosestColorRGB(pixelColorRGB);
+
 
     return emojisByColor[closestColor][Math.floor(Math.random() * emojisByColor[closestColor].length)]
 }
@@ -359,3 +367,87 @@ window.addEventListener('resize', function () {
     image.height *= 3
     scanimage()
 })
+
+
+
+function rgbToHsv(r, g, b) {
+    r /= 255;
+    g /= 255;
+    b /= 255;
+
+    let max = Math.max(r, g, b);
+    let min = Math.min(r, g, b);
+    let delta = max - min;
+
+    let h, s, v;
+
+    if (delta === 0) {
+        h = 0;
+    } else if (max === r) {
+        h = ((g - b) / delta) % 6;
+    } else if (max === g) {
+        h = (b - r) / delta + 2;
+    } else {
+        h = (r - g) / delta + 4;
+    }
+
+    h = Math.round(h * 60);
+    if (h < 0) h += 360;
+
+    s = delta === 0 ? 0 : delta / max;
+    s = +(s * 100).toFixed(2);
+
+    v = +(max * 100).toFixed(2);
+
+
+    return [h, s + 10, v];
+}
+
+
+
+function distanceBetweenColors(color1, color2) {
+    const h1 = color1[0], s1 = color1[1], l1 = color1[2];
+    const h2 = color2[0], s2 = color2[1], l2 = color2[2];
+
+    // Calculate the Euclidean distance in the HSL space
+    const dh = Math.min(Math.abs(h1 - h2), 360 - Math.abs(h1 - h2)) / 360;
+    const ds = Math.abs(s1 - s2) / 100;
+    const dl = Math.abs(l1 - l2) / 100;
+
+    // Return the total distance
+    return Math.sqrt(dh * dh + ds * ds + dl * dl);
+}
+
+function findClosestColorHSV(hsl) {
+    const colors = [
+        { name: "red", hsl: [0, 100, 50] },
+        { name: "brown", hsl: [30, 100, 35] }, // Adjusted hue value for brown
+        { name: "orange", hsl: [30, 100, 50] },
+        { name: "yellow", hsl: [60, 100, 50] },
+        { name: "green", hsl: [120, 100, 25] }, // Adjusted lightness value for green
+        { name: "blue", hsl: [240, 100, 50] },
+        { name: "pink", hsl: [330, 100, 50] }, // Adjusted hue and lightness value for pink
+        { name: "purple", hsl: [270, 100, 50] },
+        { name: "white", hsl: [0, 0, 100] },
+        { name: "black", hsl: [0, 0, 0] },
+        { name: "gray", hsl: [0, 0, 50] }
+    ];
+
+    // Initialize variables for tracking the closest color
+    let closestColor = colors[0];
+    let minDistance = distanceBetweenColors(hsl, colors[0].hsl);
+
+    // Iterate through all colors to find the closest one
+    for (const color of colors) {
+        const distance = distanceBetweenColors(hsl, color.hsl);
+        if (distance < minDistance) {
+            minDistance = distance;
+            closestColor = color;
+        }
+    }
+
+    return closestColor.name;
+}
+
+
+
