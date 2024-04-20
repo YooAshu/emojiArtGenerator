@@ -4,7 +4,7 @@
 <h1>INPUT IMAGE</h1>
 <img src = "https://github.com/YooAshu/asciiart/assets/95643200/73e7234d-8754-4e18-9980-67d81f636519">
 
-<h1>OUTPUT IMAGE IMAGE</h1>
+<h1>OUTPUT IMAGE</h1>
 <img src = "https://github.com/YooAshu/emojiArtGenerator/assets/95643200/f72185db-2750-43e1-80d3-768812c70377">
 
 <img src = "https://github.com/YooAshu/emojiArtGenerator/assets/95643200/427a1ada-d70c-4fe4-8e7f-d9e714ee7ecf">
